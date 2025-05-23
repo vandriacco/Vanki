@@ -1,0 +1,6 @@
+@Vanki.API_HostAddress = http://localhost:5228
+
+GET {{Vanki.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
