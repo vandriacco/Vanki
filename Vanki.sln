@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36121.58 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanki.API", "Vanki.API\Vanki.API.csproj", "{58225427-D54A-4E26-B45C-6B249908B578}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanki.Client", "Vanki.Client\Vanki.Client.csproj", "{420F2BBE-8881-46A2-A4FE-C0EC473F02D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{58225427-D54A-4E26-B45C-6B249908B578}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58225427-D54A-4E26-B45C-6B249908B578}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58225427-D54A-4E26-B45C-6B249908B578}.Release|Any CPU.Build.0 = Release|Any CPU
+		{420F2BBE-8881-46A2-A4FE-C0EC473F02D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{420F2BBE-8881-46A2-A4FE-C0EC473F02D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{420F2BBE-8881-46A2-A4FE-C0EC473F02D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{420F2BBE-8881-46A2-A4FE-C0EC473F02D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
