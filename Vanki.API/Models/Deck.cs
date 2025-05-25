@@ -1,8 +1,11 @@
-﻿namespace Vanki.API.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Vanki.API.Models
 {
     public class Deck
     {
-        public int Id { get; set; }
+        [Key]
+        public Guid Id { get; init; }
         public string? Name { get; set; }
         public List<Card>? Cards { get; set; } = new List<Card>();
     }

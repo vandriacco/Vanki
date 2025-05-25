@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
 using Vanki.API.Models;
 
 namespace Vanki.API.Database
