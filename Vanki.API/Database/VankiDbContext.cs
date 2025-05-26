@@ -7,6 +7,7 @@ namespace Vanki.API.Database
     {
         public DbSet<Card> Cards { get; set; }
         public DbSet<Deck> Decks { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public string DbPath { get; }
 
