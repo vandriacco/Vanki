@@ -12,8 +12,8 @@ using Vanki.API.Database;
 namespace Vanki.API.Migrations
 {
     [DbContext(typeof(VankiDbContext))]
-    [Migration("20250526024243_Cards")]
-    partial class Cards
+    [Migration("20250526025338_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
