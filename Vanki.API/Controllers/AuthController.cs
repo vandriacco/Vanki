@@ -33,7 +33,7 @@ namespace Vanki.API.Controllers
             if (result != PasswordVerificationResult.Success)
                 return Unauthorized("Invalid username or password.");
 
-            var token = _jwt.GenerateToken(user.Id, user.Username);
+            var token = _jwt.GenerateToken(user.Id);
             return Ok(new { token });
         }
 
@@ -50,7 +50,7 @@ namespace Vanki.API.Controllers
             };
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
-            var token = _jwt.GenerateToken(user.Id, user.Username);
+            var token = _jwt.GenerateToken(user.Id);
             return CreatedAtAction(nameof(Login), new { token });
         }
     }

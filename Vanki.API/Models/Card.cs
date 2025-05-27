@@ -5,7 +5,7 @@ namespace Vanki.API.Models
     public class Card
     {
         [Key]
-        public required Guid Id { get; init; }
+        public required Guid Id { get; init; } = Guid.NewGuid();
         public string Front { get; set; }
         public string Back { get; set; }
     }

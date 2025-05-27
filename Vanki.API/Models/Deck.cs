@@ -5,8 +5,13 @@ namespace Vanki.API.Models
     public class Deck
     {
         [Key]
-        public Guid Id { get; init; }
+        public Guid Id { get; init; } = Guid.NewGuid();
+        [Required]
         public string? Name { get; set; }
-        public List<Card>? Cards { get; set; } = new List<Card>();
+        [Required]
+        public Guid UserId { get; set; }
+        [Required]
+        public User User { get; set; }
+        public List<Card> Cards { get; set; } = new List<Card>();
     }
 }
