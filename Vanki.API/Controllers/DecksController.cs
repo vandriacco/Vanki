@@ -26,7 +26,7 @@ namespace Vanki.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Deck deck)
+        public async Task<IActionResult> CreateDeck([FromBody] Deck deck)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var username = User.FindFirst(ClaimTypes.Name)?.Value;
@@ -37,14 +37,13 @@ namespace Vanki.API.Controllers
             }
 
             deck.UserId = Guid.Parse(userId);
-            deck.User = await _db.Users.FirstOrDefaultAsync(u => u.Id == deck.UserId);
 
             _db.Decks.Add(deck);
             await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetDeck), new { id = deck.Id }, deck);
+            return CreatedAtAction(nameof(GetDeck), new { deckId = deck.Id }, deck);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{deckId}")]
         public async Task<IActionResult> GetDeck(Guid deckId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
