@@ -29,7 +29,6 @@ namespace Vanki.API.Controllers
         public async Task<IActionResult> CreateDeck([FromBody] Deck deck)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var username = User.FindFirst(ClaimTypes.Name)?.Value;
 
             if (userId == null)
             {
@@ -47,13 +46,19 @@ namespace Vanki.API.Controllers
         public async Task<IActionResult> GetDeck(Guid deckId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
             var deck = await _db.Decks
                 .Include(x => x.Cards)
-                .FirstOrDefaultAsync(x => x.Id == deckId && x.UserId.Equals(new Guid(userId)));
+                .FirstOrDefaultAsync(x => x.Id == deckId && x.UserId == userGuid);
 
             if (deck == null)
             {
-                return NotFound("Deck does not exist or you do not have access");
+                return NotFound("Deck not found.");
             }
 
             return Ok(deck);
@@ -63,11 +68,68 @@ namespace Vanki.API.Controllers
         public async Task<IActionResult> GetDecks()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
             var decks = await _db.Decks
-                .Where(x => x.UserId.Equals(new Guid(userId)))
+                .Where(x => x.UserId == userGuid)
                 .ToListAsync();
 
             return Ok(decks);
+        }
+
+        [HttpPut("{deckId}")]
+        public async Task<IActionResult> UpdateDeck(Guid deckId, [FromBody] UpdateDeckRequest updateDeckRequest)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            var deck = await _db.Decks
+                .FirstOrDefaultAsync(x => x.Id == deckId && x.UserId == userGuid);
+
+            if (deck == null)
+            {
+                return Forbid("Access denied.");
+            }
+
+            deck.Name = updateDeckRequest.Name;
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{deckId}")]
+        public async Task<IActionResult> DeleteDeck(Guid deckId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            var deck = await _db.Decks
+                .Include(x => x.Cards)
+                .FirstOrDefaultAsync(x => x.Id == deckId && x.UserId == userGuid);
+
+            if (deck == null)
+            {
+                return Forbid("Access denied.");
+            }
+
+            _db.Remove(deck);
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

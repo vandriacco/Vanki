@@ -14,8 +14,15 @@ namespace Vanki.API.Database
         public VankiDbContext(DbContextOptions<VankiDbContext> options) : base(options)
         {
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Deck>()
+                .HasMany(d => d.Cards)
+                .WithOne(c => c.Deck)
+                .HasForeignKey(c => c.DeckId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             base.OnModelCreating(modelBuilder);
         }
     }

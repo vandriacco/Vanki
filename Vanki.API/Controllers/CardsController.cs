@@ -36,7 +36,7 @@ namespace Vanki.API.Controllers
 
             if (deck == null)
             {
-                return NotFound("Deck does not exist or you do not have access");
+                return Forbid("Access denied.");
             }
 
             card.DeckId = deckId;
@@ -54,48 +54,38 @@ namespace Vanki.API.Controllers
 
             if (!Guid.TryParse(userId, out var userGuid))
             {
-                return Unauthorized("Invalid user");
+                return Unauthorized("User not authenticated.");
             }
 
             var card = await _db.Cards
                 .Include(x => x.Deck)
-                .FirstOrDefaultAsync(x => x.Id == cardId);
+                .FirstOrDefaultAsync(x => x.Id == cardId && x.Deck.UserId == userGuid);
 
             if (card == null)
             {
-                return NotFound("Card Not Found");
-            }
-
-            if (card.Deck == null)
-            {
-                return Forbid("You do not have access to this card.");
+                return NotFound("Card not found.");
             }
 
             return Ok(card);
         }
 
         [HttpPut("{cardId}")]
-        public async Task<IActionResult> UpdateCard(Guid cardId, [FromBody] UpdateRequest updateRequest)
+        public async Task<IActionResult> UpdateCard(Guid cardId, [FromBody] UpdateCardRequest updateRequest)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!Guid.TryParse(userId, out var userGuid))
             {
-                return Unauthorized("Invalid user");
+                return Unauthorized("User not authenticated.");
             }
 
             var card = await _db.Cards
                 .Include(x => x.Deck)
-                .FirstOrDefaultAsync(x => x.Id == cardId);
+                .FirstOrDefaultAsync(x => x.Id == cardId && x.Deck.UserId == userGuid);
 
             if (card == null)
             {
-                return NotFound("Card not found or access denied.");
-            }
-
-            if (card.Deck == null)
-            {
-                return Forbid("You do not have access to this card.");
+                return NotFound("Card not found.");
             }
 
             card.Front = updateRequest.Front;
@@ -103,7 +93,7 @@ namespace Vanki.API.Controllers
 
             await _db.SaveChangesAsync();
 
-            return Ok(card);
+            return NoContent();
         }
 
         [HttpDelete("{cardId}")]
@@ -113,21 +103,16 @@ namespace Vanki.API.Controllers
 
             if (!Guid.TryParse(userId, out var userGuid))
             {
-                return Unauthorized("Invalid user");
+                return Unauthorized("User not authenticated.");
             }
 
             var card = await _db.Cards
                 .Include(x => x.Deck)
-                .FirstOrDefaultAsync(x => x.Id == cardId);
+                .FirstOrDefaultAsync(x => x.Id == cardId && x.Deck.UserId == userGuid);
 
             if (card == null)
             {
-                return NotFound("Card not found or access denied.");
-            }
-
-            if (card.Deck == null)
-            {
-                return Forbid("You do not have access to this card.");
+                return NotFound("Card not found.");
             }
 
             _db.Remove(card);
