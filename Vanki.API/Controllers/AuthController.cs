@@ -13,10 +13,10 @@ namespace Vanki.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly VankiDbContext _db;
-        private readonly JwtService _jwt;
+        private readonly IJwtService _jwt;
         private readonly PasswordHasher<User> _hasher = new();
 
-        public AuthController(VankiDbContext db, JwtService jwt)
+        public AuthController(VankiDbContext db, IJwtService jwt)
         {
             _db = db;
             _jwt = jwt;

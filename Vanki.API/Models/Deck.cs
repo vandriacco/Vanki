@@ -13,5 +13,7 @@ namespace Vanki.API.Models
         [Required]
         public User User { get; set; }
         public List<Card> Cards { get; set; } = new List<Card>();
+        public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
+
     }
 }

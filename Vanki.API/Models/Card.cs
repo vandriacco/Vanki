@@ -10,7 +10,14 @@ namespace Vanki.API.Models
         [Required]
         public Guid DeckId { get; set; }
         public Deck Deck { get; set; }
+        [Required]
         public string Front { get; set; }
+        [Required]
         public string Back { get; set; }
+        public double Interval { get; set; } = 0;
+        public double EfficiencyScore { get; set; } = 2.5;
+        public int Repetitions { get; set; } = 0;
+        public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
+        public DateTime? ReviewDate { get; set; }
     }
 }

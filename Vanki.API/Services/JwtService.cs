@@ -6,7 +6,7 @@ using Vanki.API.Models;
 
 namespace Vanki.API.Services
 {
-    public class JwtService
+    public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
 

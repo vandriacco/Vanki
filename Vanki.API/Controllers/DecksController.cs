@@ -20,13 +20,13 @@ namespace Vanki.API.Controllers
     {
         private readonly VankiDbContext _db;
 
-        public DecksController(VankiDbContext context)
+        public DecksController(VankiDbContext db)
         {
-            _db = context;
+            _db = db;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateDeck([FromBody] Deck deck)
+        public async Task<IActionResult> CreateDeck([FromBody] CreateDeckRequest request)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -35,7 +35,11 @@ namespace Vanki.API.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            deck.UserId = Guid.Parse(userId);
+            var deck = new Deck
+            {
+                UserId = Guid.Parse(userId),
+                Name = request.Name
+            };
 
             _db.Decks.Add(deck);
             await _db.SaveChangesAsync();

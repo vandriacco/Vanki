@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vanki.API.Database;
 
@@ -11,9 +12,11 @@ using Vanki.API.Database;
 namespace Vanki.API.Migrations
 {
     [DbContext(typeof(VankiDbContext))]
-    partial class VankiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250601214512_SRSLogic")]
+    partial class SRSLogic
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,7 +54,7 @@ namespace Vanki.API.Migrations
                     b.Property<int>("Repetitions")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("ReviewDate")
+                    b.Property<DateTime>("ReviewDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -66,9 +69,6 @@ namespace Vanki.API.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -89,9 +89,6 @@ namespace Vanki.API.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
