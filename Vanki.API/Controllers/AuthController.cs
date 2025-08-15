@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Mail;
+using System.Text.RegularExpressions;
 using Vanki.API.Database;
 using Vanki.API.Models;
 using Vanki.API.Services;
@@ -25,9 +26,11 @@ namespace Vanki.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == request.Username && u.Email == request.Email);
             if (user == null)
+            {
                 return Unauthorized("Invalid username or password.");
+            }
 
             var result = _hasher.VerifyHashedPassword(null, user.PasswordHash, request.Password);
             if (result != PasswordVerificationResult.Success)
@@ -40,8 +43,41 @@ namespace Vanki.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            if (await _db.Users.AnyAsync(u => u.Username == request.Username || u.Email == request.Email))
-                return BadRequest("Username or email already exists.");
+            if (string.IsNullOrWhiteSpace(request.Username))
+            {
+                return BadRequest("Username is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest("Email is required.");
+            }
+
+            var usernamePattern = @"^[a-zA-Z0-9_]{3,20}$";
+            if (!Regex.IsMatch(request.Username, usernamePattern))
+            {
+                return BadRequest("Username must be 3-20 characters and contain only letters, numbers, or underscores.");
+            }
+
+            try
+            {
+                var email = new MailAddress(request.Email);
+            }
+            catch
+            {
+                return BadRequest("Invalid email format.");
+            }
+
+            if (await _db.Users.AnyAsync(u => u.Username == request.Username))
+            {
+                return BadRequest("Username already exists.");
+            }
+
+            if (await _db.Users.AnyAsync(u => u.Email == request.Email))
+            {
+                return BadRequest("Email already exists.");
+            }
+
             var user = new User
             {
                 Username = request.Username,

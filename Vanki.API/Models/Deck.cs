@@ -7,7 +7,7 @@ namespace Vanki.API.Models
         [Key]
         public Guid Id { get; init; } = Guid.NewGuid();
         [Required]
-        public string? Name { get; set; }
+        public string Name { get; set; }
         [Required]
         public Guid UserId { get; set; }
         [Required]

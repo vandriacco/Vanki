@@ -1,13 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Vanki.API.Database;
 using Vanki.API.Models;
 
@@ -43,7 +37,15 @@ namespace Vanki.API.Controllers
 
             _db.Decks.Add(deck);
             await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetDeck), new { deckId = deck.Id }, deck);
+
+            var dto = new DeckDetailDto()
+            {
+                Id = deck.Id,
+                Name = deck.Name,
+                CreatedDate = deck.CreatedDate,
+            };
+
+            return CreatedAtAction(nameof(GetDeck), new { deckId = deck.Id }, dto);
         }
 
         [HttpGet("{deckId}")]
@@ -57,8 +59,21 @@ namespace Vanki.API.Controllers
             }
 
             var deck = await _db.Decks
-                .Include(x => x.Cards)
-                .FirstOrDefaultAsync(x => x.Id == deckId && x.UserId == userGuid);
+                .Where(d => d.UserId == userGuid && d.Id == deckId)
+                .Select(d => new DeckDetailDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    CreatedDate = d.CreatedDate,
+                    Cards = d.Cards.Select(c => new CardDto
+                    {
+                        Id = c.Id,
+                        Front = c.Front,
+                        Back = c.Back,
+                        ReviewDate = c.ReviewDate
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
             if (deck == null)
             {
@@ -79,7 +94,14 @@ namespace Vanki.API.Controllers
             }
 
             var decks = await _db.Decks
-                .Where(x => x.UserId == userGuid)
+                .Where(d => d.UserId == userGuid)
+                .Select(d => new DeckSummaryDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    CreatedDate = d.CreatedDate,
+                    CardCount = d.Cards.Count()
+                })
                 .ToListAsync();
 
             return Ok(decks);
@@ -121,8 +143,8 @@ namespace Vanki.API.Controllers
             }
 
             var deck = await _db.Decks
-                .Include(x => x.Cards)
-                .FirstOrDefaultAsync(x => x.Id == deckId && x.UserId == userGuid);
+                .Include(d => d.Cards)
+                .FirstOrDefaultAsync(d => d.Id == deckId && d.UserId == userGuid);
 
             if (deck == null)
             {

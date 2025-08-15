@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Vanki.API.Models
 {
@@ -9,6 +10,7 @@ namespace Vanki.API.Models
         public Guid Id { get; init; } = Guid.NewGuid();
         [Required]
         public Guid DeckId { get; set; }
+        [JsonIgnore]
         public Deck Deck { get; set; }
         [Required]
         public string Front { get; set; }

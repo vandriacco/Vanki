@@ -34,8 +34,8 @@ namespace Vanki.API.Controllers
             }
 
             var deck = await _db.Decks
-                .Include(x => x.Cards)
-                .FirstOrDefaultAsync(x => x.Id == deckId && x.UserId.Equals(new Guid(userId)));
+                .Include(d => d.Cards)
+                .FirstOrDefaultAsync(d => d.Id == deckId && d.UserId.Equals(new Guid(userId)));
 
             if (deck == null)
             {
@@ -52,7 +52,16 @@ namespace Vanki.API.Controllers
             _db.Cards.Add(card);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCard), new { deckId = card.DeckId, cardId = card.Id }, card);
+            var dto = new CardDto
+            {
+                Id = card.Id,
+                Front = card.Front,
+                Back = card.Back,
+                CreatedDate = card.CreatedDate,
+                ReviewDate = card.ReviewDate
+            };
+
+            return CreatedAtAction(nameof(GetCard), new { deckId = card.DeckId, cardId = card.Id }, dto);
         }
 
         [HttpGet("{cardId}")]
@@ -67,14 +76,23 @@ namespace Vanki.API.Controllers
 
             var card = await _db.Cards
                 .Include(x => x.Deck)
-                .FirstOrDefaultAsync(x => x.Id == cardId && x.Deck.UserId == userGuid);
+                .FirstOrDefaultAsync(c => c.Id == cardId && c.Deck.UserId == userGuid);
 
             if (card == null)
             {
                 return NotFound("Card not found.");
             }
 
-            return Ok(card);
+            var dto = new CardDto
+            {
+                Id = card.Id,
+                Front = card.Front,
+                Back = card.Back,
+                CreatedDate = card.CreatedDate,
+                ReviewDate = card.ReviewDate
+            };
+
+            return Ok(dto);
         }
 
         [HttpPut("{cardId}")]
@@ -89,7 +107,7 @@ namespace Vanki.API.Controllers
 
             var card = await _db.Cards
                 .Include(x => x.Deck)
-                .FirstOrDefaultAsync(x => x.Id == cardId && x.Deck.UserId == userGuid);
+                .FirstOrDefaultAsync(c => c.Id == cardId && c.Deck.UserId == userGuid);
 
             if (card == null)
             {
