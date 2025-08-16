@@ -8,7 +8,7 @@ using Vanki.API.Models;
 namespace Vanki.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/decks")]
     [Authorize]
     public class DecksController : ControllerBase
     {
@@ -48,7 +48,7 @@ namespace Vanki.API.Controllers
             return CreatedAtAction(nameof(GetDeck), new { deckId = deck.Id }, dto);
         }
 
-        [HttpGet("{deckId}")]
+        [HttpGet("{deckId:guid}")]
         public async Task<IActionResult> GetDeck(Guid deckId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -100,14 +100,15 @@ namespace Vanki.API.Controllers
                     Id = d.Id,
                     Name = d.Name,
                     CreatedDate = d.CreatedDate,
-                    CardCount = d.Cards.Count()
+                    CardCount = d.Cards.Count(),
+                    CardsDue = d.Cards.Count(c => c.ReviewDate <= DateTime.UtcNow)
                 })
                 .ToListAsync();
 
             return Ok(decks);
         }
 
-        [HttpPut("{deckId}")]
+        [HttpPut("{deckId:guid}")]
         public async Task<IActionResult> UpdateDeck(Guid deckId, [FromBody] UpdateDeckRequest updateDeckRequest)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -132,7 +133,7 @@ namespace Vanki.API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{deckId}")]
+        [HttpDelete("{deckId:guid}")]
         public async Task<IActionResult> DeleteDeck(Guid deckId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

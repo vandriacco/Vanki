@@ -10,7 +10,7 @@ using Vanki.API.Services;
 namespace Vanki.API.Controllers
 {
     [ApiController]
-    [Route("api/{deckId}/[controller]")]
+    [Route("api/decks/{deckId:guid}/cards")]
     [Authorize]
     public class CardsController : ControllerBase
     {
@@ -64,7 +64,7 @@ namespace Vanki.API.Controllers
             return CreatedAtAction(nameof(GetCard), new { deckId = card.DeckId, cardId = card.Id }, dto);
         }
 
-        [HttpGet("{cardId}")]
+        [HttpGet("{cardId:guid}")]
         public async Task<IActionResult> GetCard(Guid cardId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -95,7 +95,7 @@ namespace Vanki.API.Controllers
             return Ok(dto);
         }
 
-        [HttpPut("{cardId}")]
+        [HttpPut("{cardId:guid}")]
         public async Task<IActionResult> UpdateCard(Guid cardId, [FromBody] UpdateCardRequest updateRequest)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -122,7 +122,7 @@ namespace Vanki.API.Controllers
             return NoContent();
         }
 
-        [HttpPut("review/{cardId}")]
+        [HttpPut("review/{cardId:guid}")]
         public async Task<IActionResult> ReviewCard(Guid cardId, [FromBody] ReviewRequest request)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -152,7 +152,7 @@ namespace Vanki.API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{cardId}")]
+        [HttpDelete("{cardId:guid}")]
         public async Task<IActionResult> DeleteCard(Guid cardId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

@@ -6,5 +6,6 @@
         public required string Name { get; set; }
         public DateTime CreatedDate { get; set; }
         public int CardCount { get; set; }
+        public int CardsDue { get; set; }
     }
 }
