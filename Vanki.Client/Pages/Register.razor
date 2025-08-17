@@ -1,11 +1,13 @@
-﻿@page "/login"
+﻿@page "/register"
 
-<PageTitle>Login</PageTitle>
+<PageTitle>Register</PageTitle>
 
 <MudContainer Class="d-flex align-center justify-center mud-width-full" style="height:100vh">
     <MudPaper Class="pa-4" Style="width:100%; max-width:900px;">
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-            <MudTextField T="string" Label="Username or email" Required="true" RequiredError="Username or email is required!" />
+            <MudTextField T="string" Label="Username" Required="true" RequiredError="User name is required!" />
+            <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
+                            Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
             <MudTextField T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
                             InputType="@PasswordInput"
                             RequiredError="Password is required!" 
@@ -14,11 +16,18 @@
                             OnAdornmentClick="ShowPassword" 
                             AdornmentAriaLabel="Show Password"
                             Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true" />
+            <MudTextField T="string"
+                            Label="Password" HelperText="Repeat the password" 
+                            InputType="@PasswordInput"
+                            Adornment="Adornment.End"
+                            AdornmentIcon="@PasswordInputIcon"
+                            OnAdornmentClick="ShowPassword"
+                            Validation="@(new Func<string, string>(PasswordMatch))" />
             <div class="d-flex align-center justify-space-between">
                 <MudText Class="mt-4">
-                    New here? <MudLink Href="/register">Create an account</MudLink>
+                    Already have an account? <MudLink Href="/login">Log in</MudLink>
                 </MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto">Login</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto">Register</MudButton>
             </div>
         </MudForm>
     </MudPaper>
@@ -49,6 +58,14 @@
         if (!Regex.IsMatch(pw, @"[0-9]"))
             yield return "Password must contain at least one digit";
     }
+
+    private string PasswordMatch(string arg)
+    {
+        if (pwField1.Value != arg)
+            return "Passwords don't match";
+        return null;
+    }
+
 
     void ShowPassword()
     {
