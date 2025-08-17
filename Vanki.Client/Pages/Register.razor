@@ -1,14 +1,21 @@
 ﻿@page "/register"
+@inject IHttpClientFactory Http
 
 <PageTitle>Register</PageTitle>
 
 <MudContainer Class="d-flex align-center justify-center mud-width-full" style="height:100vh">
     <MudPaper Class="pa-4" Style="width:100%; max-width:900px;">
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Elevation="0" Class="mb-3">
+                @Error
+            </MudAlert>
+        }
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-            <MudTextField T="string" Label="Username" Required="true" RequiredError="User name is required!" />
-            <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
+            <MudTextField T="string" @bind-Value="Username" Label="Username" Required="true" RequiredError="User name is required!" />
+            <MudTextField T="string" @bind-Value="Email" Label="Email" Required="true" RequiredError="Email is required!"
                             Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
-            <MudTextField T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
+            <MudTextField T="string" @bind-Value="Password" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
                             InputType="@PasswordInput"
                             RequiredError="Password is required!" 
                             Adornment="Adornment.End" 
@@ -27,9 +34,13 @@
                 <MudText Class="mt-4">
                     Already have an account? <MudLink Href="/login">Log in</MudLink>
                 </MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto">Register</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" @onclick="DoRegister" Class="ml-auto">Register</MudButton>
             </div>
         </MudForm>
+        @if (!string.IsNullOrEmpty(Token))
+        {
+            <MudText>@Token</MudText>
+        }
     </MudPaper>
 </MudContainer>
 
@@ -81,5 +92,31 @@
             PasswordInputIcon = Icons.Material.Filled.Visibility;
             PasswordInput = InputType.Text;
         }
+    }
+
+    private string Token;
+    private string Error;
+    private string Username { get; set; }
+    private string Email { get; set; }
+    private string Password { get; set; }
+
+    private record RegisterRequest(string Username, string Email, string Password);
+    private record AuthResponse(string Token);
+
+    private async Task DoRegister()
+    {
+        Error = ""; Token = "";
+        var client = Http.CreateClient("Api");
+
+        var resp = await client.PostAsJsonAsync("auth/register", new RegisterRequest(Username, Email, Password));
+        if (!resp.IsSuccessStatusCode)
+        {
+            var msg = await resp.Content.ReadAsStringAsync();
+            Error = $"Login failed: {msg}";
+            return;
+        }
+
+        var data = await resp.Content.ReadFromJsonAsync<AuthResponse>();
+        Token = data?.Token;
     }
 }

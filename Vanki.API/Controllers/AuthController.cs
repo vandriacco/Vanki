@@ -10,7 +10,7 @@ using Vanki.API.Services;
 namespace Vanki.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
         private readonly VankiDbContext _db;
@@ -26,15 +26,15 @@ namespace Vanki.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == request.Username && u.Email == request.Email);
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == request.Identifier || u.Email == request.Identifier);
             if (user == null)
             {
-                return Unauthorized("Invalid username or password.");
+                return BadRequest("Invalid username or email");
             }
 
             var result = _hasher.VerifyHashedPassword(null, user.PasswordHash, request.Password);
             if (result != PasswordVerificationResult.Success)
-                return Unauthorized("Invalid username or password.");
+                return BadRequest("Invalid password.");
 
             var token = _jwt.GenerateToken(user.Id);
             return Ok(new { token });
@@ -86,8 +86,9 @@ namespace Vanki.API.Controllers
             };
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
+
             var token = _jwt.GenerateToken(user.Id);
-            return CreatedAtAction(nameof(Login), new { token });
+            return Ok(new { token });
         }
     }
 }

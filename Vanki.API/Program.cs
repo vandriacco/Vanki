@@ -66,14 +66,24 @@ builder.Services.AddDbContext<VankiDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
     );
 
-var app = builder.Build();
 
+
+var clientOrigin = "https://localhost:7133";
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.WithOrigins(clientOrigin)
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+));
+
+var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors();
 
 app.UseHttpsRedirection();
 

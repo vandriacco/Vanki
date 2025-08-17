@@ -1,26 +1,37 @@
 ﻿@page "/login"
+@inject IHttpClientFactory Http
 
 <PageTitle>Login</PageTitle>
 
 <MudContainer Class="d-flex align-center justify-center mud-width-full" style="height:100vh">
     <MudPaper Class="pa-4" Style="width:100%; max-width:900px;">
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Elevation="0" Class="mb-3">
+                @Error
+            </MudAlert>
+        }
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-            <MudTextField T="string" Label="Username or email" Required="true" RequiredError="Username or email is required!" />
-            <MudTextField T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
+            <MudTextField T="string" @bind-Value="Identifier" Label="Username or email" Required="true" RequiredError="Username or email is required!" />
+            <MudTextField T="string" @bind-Value="Password" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
                             InputType="@PasswordInput"
                             RequiredError="Password is required!" 
                             Adornment="Adornment.End" 
                             AdornmentIcon="@PasswordInputIcon" 
                             OnAdornmentClick="ShowPassword" 
                             AdornmentAriaLabel="Show Password"
-                            Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true" />
+                            Required="true" />
             <div class="d-flex align-center justify-space-between">
                 <MudText Class="mt-4">
                     New here? <MudLink Href="/register">Create an account</MudLink>
                 </MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto">Login</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" @onclick="DoLogin" Class="ml-auto">Login</MudButton>
             </div>
         </MudForm>
+        @if (!string.IsNullOrEmpty(Token))
+        {
+            <MudText>@Token</MudText>
+        }
     </MudPaper>
 </MudContainer>
 
@@ -32,23 +43,6 @@
     bool isShow;
     InputType PasswordInput = InputType.Password;
     string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-
-    private IEnumerable<string> PasswordStrength(string pw)
-    {
-        if (string.IsNullOrWhiteSpace(pw))
-        {
-            yield return "Password is required!";
-            yield break;
-        }
-        if (pw.Length < 8)
-            yield return "Password must be at least of length 8";
-        if (!Regex.IsMatch(pw, @"[A-Z]"))
-            yield return "Password must contain at least one capital letter";
-        if (!Regex.IsMatch(pw, @"[a-z]"))
-            yield return "Password must contain at least one lowercase letter";
-        if (!Regex.IsMatch(pw, @"[0-9]"))
-            yield return "Password must contain at least one digit";
-    }
 
     void ShowPassword()
     {
@@ -64,5 +58,30 @@
             PasswordInputIcon = Icons.Material.Filled.Visibility;
             PasswordInput = InputType.Text;
         }
+    }
+
+    private string Token;
+    private string Error;
+    private string Identifier { get; set; }
+    private string Password { get; set; }
+
+    private record LoginRequest(string Identifier, string Password);
+    private record AuthResponse(string Token);
+
+    private async Task DoLogin()
+    {
+        Error = ""; Token = "";
+        var client = Http.CreateClient("Api");
+
+        var resp = await client.PostAsJsonAsync("auth/login", new LoginRequest(Identifier, Password));
+        if (!resp.IsSuccessStatusCode)
+        {
+            var msg = await resp.Content.ReadAsStringAsync();
+            Error = $"Login failed: {msg}";
+            return;
+        }
+
+        var data = await resp.Content.ReadFromJsonAsync<AuthResponse>();
+        Token = data?.Token;
     }
 }
