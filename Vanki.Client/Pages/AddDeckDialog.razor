@@ -1,21 +1,45 @@
 ﻿<MudDialog>
-    <TitleContent>
-        Dialog Title
-    </TitleContent>
     <DialogContent>
-        Dialog Content
+        <MudForm @ref="_form" @bind-IsValid="_valid">
+            <MudTextField @bind-Value="_name"
+                          Label="Deck name"
+                          Required="true"
+                          RequiredError="Name is required" />
+        </MudForm>
     </DialogContent>
+
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Disabled="@(!_valid)" OnClick="Save">Save</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    // passed in by the caller
+    [Parameter] public Guid? DeckId { get; set; }
+    [Parameter] public string? InitialName { get; set; }
+
+    private MudForm? _form;
+    private bool _valid;
+    private string _name = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _name = InitialName ?? string.Empty;
+    }
+
+    private async Task Save()
+    {
+        await _form!.Validate();
+        if (!_valid) return;
+
+        // return the user's input to the caller
+        MudDialog.Close(DialogResult.Ok(new DeckInput(DeckId, _name)));
+    }
 
     private void Cancel() => MudDialog.Cancel();
+
+    public record DeckInput(Guid? DeckId, string Name);
 }

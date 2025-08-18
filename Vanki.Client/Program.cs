@@ -22,6 +22,7 @@ builder.Services.AddHttpClient("Api", c =>
 }).AddHttpMessageHandler<ApiAuthMessageHandler>();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<DeckService>();
 
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();

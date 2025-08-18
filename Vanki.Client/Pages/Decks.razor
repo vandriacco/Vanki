@@ -1,5 +1,7 @@
 ﻿@page "/decks"
 @inject IHttpClientFactory Factory
+@inject DeckService DecksService
+@inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 
 <PageTitle>Decks</PageTitle>
@@ -15,25 +17,20 @@
                 <MudStack Row Spacing="2">
                     <MudButton Variant="Variant.Filled"
                                StartIcon="@Icons.Material.TwoTone.Add"
-                               OnClick="@ToggleOpen">
+                               OnClick="AddDeck">
                         Add
                     </MudButton>
 
                     <MudButton Variant="Variant.Filled"
-                               StartIcon="@Icons.Material.Sharp.Edit">
+                               StartIcon="@Icons.Material.Sharp.Edit"
+                               OnClick="ToggleEdit">
                         Edit
                     </MudButton>
                 </MudStack>
             </MudItem>
         </MudGrid>
 
-        <MudPopover Open="@_open" Fixed="false" Class="px-4 pt-4">
-            <div class="d-flex flex-column">
-                <MudTextField T="string" @bind-Value="Front" Label="Front" />
-                <MudTextField T="string" @bind-Value="Back" Label="Back" />
-                <MudButton @onclick="OpenDialogAsync" Class="ml-auto mr-n3 mb-1" Color="Color.Error">Close</MudButton>
-            </div>
-        </MudPopover>
+
 
         @if (!string.IsNullOrEmpty(Error))
         {
@@ -49,18 +46,35 @@
             <MudTable Items="_decks" Dense="true" Hover="true">
                 <HeaderContent>
                     <MudTh>Name</MudTh>
-                    <MudTh style="width:140px">Due</MudTh>
-                    <MudTh style="width:140px">New</MudTh>
-                    <MudTh style="width:140px"></MudTh>
+                    @if (Edit)
+                    {
+                        <MudTh></MudTh>
+                    }
+                    <MudTh style="width:50px">Due</MudTh>
+                    <MudTh style="width:50px">New</MudTh>
+                    <MudTh style="width:100px"></MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Name">@context.Name</MudTd>
+                    @if(Edit)
+                    {
+                        <MudTd>
+                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Sharp.Delete"
+                                        OnClick="@(()=>DeleteDeck(context.Id))">
+                                Delete
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Sharp.Edit"
+                                        OnClick="@(()=>EditDeck(context.Id, context.Name))">
+                                Update
+                            </MudButton>
+                         </MudTd>
+                    }
                     <MudTd DataLabel="Due">@context.CardsDue</MudTd>
                     <MudTd DataLabel="New">@context.NewCards</MudTd>
                     <MudTd>
                         <MudButton Variant="Variant.Filled"
-                                   Disabled="@(@context.CardsDue == 0)"
-                                   Href="@($"/review/{context.Id}")">
+                                    Disabled="@(@context.CardsDue == 0)"
+                                    Href="@($"/review/{context.Id}")">
                             Review
                         </MudButton>
                     </MudTd>
@@ -74,37 +88,70 @@
     private List<DeckSummaryDto>? _decks;
     private bool Loading = true;
     private string? Error;
-    private bool _open;
+    private bool Edit = false;
 
     private string Front { get; set; } = string.Empty;
     private string Back { get; set; } = string.Empty;
 
-    private Task OpenDialogAsync()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+    protected override async Task OnInitializedAsync() => await LoadDecks();
 
-        return DialogService.ShowAsync<DialogUsageExample_Dialog>("Simple Dialog", options);
+    private async Task LoadDecks()
+    {
+        Error = null; Loading = true;
+        try 
+        {
+            _decks = await DecksService.GetDecks(); 
+        }
+        catch (Exception ex) 
+        { 
+            Error = ex.Message; 
+        }
+        finally 
+        { 
+            Loading = false; 
+        }
     }
 
-    protected override async Task OnInitializedAsync()
+    private void ToggleEdit() => Edit = !Edit;
+
+    private async Task AddDeck()
     {
-        var http = Factory.CreateClient("Api");
-        var res = await http.GetAsync("decks");
+        var parameters = new DialogParameters { ["DeckId"] = null, ["InitialName"] = string.Empty };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await Dialog.ShowAsync<AddDeckDialog>("Add Deck", parameters, options);
+        var result = await dialog.Result;
 
-        if (res.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        if (!result.Canceled && result.Data is AddDeckDialog.DeckInput input)
         {
-            NavigationManager.NavigateTo("/login", true);
-            return;
+            await DecksService.CreateDeck(input.Name);
+            await LoadDecks();
         }
+    }
 
-        if (!res.IsSuccessStatusCode)
+    private async Task EditDeck(Guid deckId, string currentName)
+    {
+        var parameters = new DialogParameters { ["DeckId"] = deckId, ["InitialName"] = currentName };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await Dialog.ShowAsync<AddDeckDialog>("Edit Deck", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AddDeckDialog.DeckInput input)
         {
-            Error = await res.Content.ReadAsStringAsync();
-            Loading = false;
-            return;
+            await DecksService.UpdateDeck(deckId, input.Name);
+            await LoadDecks();
         }
+    }
 
-        _decks = await res.Content.ReadFromJsonAsync<List<DeckSummaryDto>>();
-        Loading = false;
+    private async Task DeleteDeck(Guid deckId)
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Deck", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await DecksService.DeleteDeck(deckId);
+            await LoadDecks();
+        }
     }
 }
