@@ -1,0 +1,70 @@
+﻿@page "/decks"
+@inject IHttpClientFactory Factory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Decks</PageTitle>
+
+<MudContainer Class="d-flex align-center justify-center mud-width-full" style="height:100vh">
+    <MudPaper Class="pa-4" Style="width:100%; max-width:900px;">
+        <MudText Typo="Typo.h5" GutterBottom>Your Decks</MudText>
+
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+        }
+
+        @if (Loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudTable Items="_decks" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh style="width:140px">Due</MudTh>
+                    <MudTh style="width:140px"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Due">@context.CardsDue</MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Filled"
+                                   Disabled="@(@context.CardsDue == 0)"
+                                   Href="@($"/review/{context.Id}")">
+                            Review
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<DeckSummaryDto>? _decks;
+    private bool Loading = true;
+    private string? Error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var http = Factory.CreateClient("Api");
+        var res = await http.GetAsync("decks");
+
+        if (res.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        if (!res.IsSuccessStatusCode)
+        {
+            Error = await res.Content.ReadAsStringAsync();
+            Loading = false;
+            return;
+        }
+
+        _decks = await res.Content.ReadFromJsonAsync<List<DeckSummaryDto>>();
+        Loading = false;
+    }
+}

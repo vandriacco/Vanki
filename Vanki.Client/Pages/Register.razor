@@ -1,5 +1,6 @@
 ﻿@page "/register"
-@inject IHttpClientFactory Http
+@inject IAuthenticationService AuthenticationService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Register</PageTitle>
 
@@ -100,23 +101,20 @@
     private string Email { get; set; }
     private string Password { get; set; }
 
-    private record RegisterRequest(string Username, string Email, string Password);
-    private record AuthResponse(string Token);
-
     private async Task DoRegister()
     {
-        Error = ""; Token = "";
-        var client = Http.CreateClient("Api");
+        Error = string.Empty;
 
-        var resp = await client.PostAsJsonAsync("auth/register", new RegisterRequest(Username, Email, Password));
-        if (!resp.IsSuccessStatusCode)
+        await form!.Validate();
+        if (!success) return;
+
+        var result = await AuthenticationService.Register(Username, Email, Password);
+        if (!result.Ok)
         {
-            var msg = await resp.Content.ReadAsStringAsync();
-            Error = $"Login failed: {msg}";
+            Error = result.Error ?? "Registration failed.";
             return;
         }
 
-        var data = await resp.Content.ReadFromJsonAsync<AuthResponse>();
-        Token = data?.Token;
+        NavigationManager.NavigateTo("/decks", true);
     }
 }

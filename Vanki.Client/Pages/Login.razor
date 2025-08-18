@@ -1,5 +1,6 @@
 ﻿@page "/login"
-@inject IHttpClientFactory Http
+@inject IAuthenticationService AuthenticationService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Login</PageTitle>
 
@@ -13,7 +14,8 @@
         }
         <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
             <MudTextField T="string" @bind-Value="Identifier" Label="Username or email" Required="true" RequiredError="Username or email is required!" />
-            <MudTextField T="string" @bind-Value="Password" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
+
+            <MudTextField T="string" @bind-Value="Password" Label="Password" HelperText="Choose a strong password"
                             InputType="@PasswordInput"
                             RequiredError="Password is required!" 
                             Adornment="Adornment.End" 
@@ -21,6 +23,7 @@
                             OnAdornmentClick="ShowPassword" 
                             AdornmentAriaLabel="Show Password"
                             Required="true" />
+
             <div class="d-flex align-center justify-space-between">
                 <MudText Class="mt-4">
                     New here? <MudLink Href="/register">Create an account</MudLink>
@@ -37,9 +40,8 @@
 
 @code {
     bool success;
-    string[] errors = { };
-    MudTextField<string> pwField1;
-    MudForm form;
+    MudForm? form;
+    string[] errors = Array.Empty<string>();
     bool isShow;
     InputType PasswordInput = InputType.Password;
     string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
@@ -62,26 +64,23 @@
 
     private string Token;
     private string Error;
-    private string Identifier { get; set; }
-    private string Password { get; set; }
-
-    private record LoginRequest(string Identifier, string Password);
-    private record AuthResponse(string Token);
+    private string Identifier { get; set; } = string.Empty;
+    private string Password { get; set; } = string.Empty;
 
     private async Task DoLogin()
     {
-        Error = ""; Token = "";
-        var client = Http.CreateClient("Api");
+        Error = string.Empty;
 
-        var resp = await client.PostAsJsonAsync("auth/login", new LoginRequest(Identifier, Password));
-        if (!resp.IsSuccessStatusCode)
+        await form!.Validate();
+        if (!success) return;
+
+        var result = await AuthenticationService.Login(Identifier, Password);
+        if (!result.Ok)
         {
-            var msg = await resp.Content.ReadAsStringAsync();
-            Error = $"Login failed: {msg}";
+            Error = result.Error ?? "Login failed.";
             return;
         }
 
-        var data = await resp.Content.ReadFromJsonAsync<AuthResponse>();
-        Token = data?.Token;
+        NavigationManager.NavigateTo("/decks", true);
     }
 }

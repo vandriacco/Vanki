@@ -2,7 +2,7 @@
 {
     public class UpdateCardRequest
     {
-        public string Front { get; set; }
-        public string Back { get; set; }
+        public string Front { get; set; } = string.Empty;
+        public string Back { get; set; } = string.Empty;
     }
 }

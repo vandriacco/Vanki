@@ -20,6 +20,6 @@ namespace Vanki.API.Models
         public double EfficiencyScore { get; set; } = 2.5;
         public int Repetitions { get; set; } = 0;
         public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
-        public DateTime? ReviewDate { get; set; }
+        public DateTime ReviewDate { get; set; } = DateTime.UtcNow;
     }
 }
