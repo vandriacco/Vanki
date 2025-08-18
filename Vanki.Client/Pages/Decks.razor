@@ -6,7 +6,34 @@
 
 <MudContainer Class="d-flex align-center justify-center mud-width-full" style="height:100vh">
     <MudPaper Class="pa-4" Style="width:100%; max-width:900px;">
-        <MudText Typo="Typo.h5" GutterBottom>Your Decks</MudText>
+        <MudGrid Class="justify-space-between align-items-center">
+            <MudItem>
+                <MudText Typo="Typo.h5" GutterBottom>Your Decks</MudText>
+            </MudItem>
+
+            <MudItem>
+                <MudStack Row Spacing="2">
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.TwoTone.Add"
+                               OnClick="@ToggleOpen">
+                        Add
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Sharp.Edit">
+                        Edit
+                    </MudButton>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        <MudPopover Open="@_open" Fixed="false" Class="px-4 pt-4">
+            <div class="d-flex flex-column">
+                <MudTextField T="string" @bind-Value="Front" Label="Front" />
+                <MudTextField T="string" @bind-Value="Back" Label="Back" />
+                <MudButton @onclick="OpenDialogAsync" Class="ml-auto mr-n3 mb-1" Color="Color.Error">Close</MudButton>
+            </div>
+        </MudPopover>
 
         @if (!string.IsNullOrEmpty(Error))
         {
@@ -23,11 +50,13 @@
                 <HeaderContent>
                     <MudTh>Name</MudTh>
                     <MudTh style="width:140px">Due</MudTh>
+                    <MudTh style="width:140px">New</MudTh>
                     <MudTh style="width:140px"></MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Name">@context.Name</MudTd>
                     <MudTd DataLabel="Due">@context.CardsDue</MudTd>
+                    <MudTd DataLabel="New">@context.NewCards</MudTd>
                     <MudTd>
                         <MudButton Variant="Variant.Filled"
                                    Disabled="@(@context.CardsDue == 0)"
@@ -45,6 +74,17 @@
     private List<DeckSummaryDto>? _decks;
     private bool Loading = true;
     private string? Error;
+    private bool _open;
+
+    private string Front { get; set; } = string.Empty;
+    private string Back { get; set; } = string.Empty;
+
+    private Task OpenDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        return DialogService.ShowAsync<DialogUsageExample_Dialog>("Simple Dialog", options);
+    }
 
     protected override async Task OnInitializedAsync()
     {

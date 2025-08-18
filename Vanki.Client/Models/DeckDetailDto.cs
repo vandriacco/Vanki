@@ -6,5 +6,8 @@
         public required string Name { get; set; }
         public DateTime CreatedDate { get; set; }
         public List<CardDto>? Cards { get; set; }
+        public int CardsDue { get; set; }
+
+        public int NewCards { get; set; }
     }
 }

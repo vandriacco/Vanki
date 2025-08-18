@@ -7,5 +7,6 @@
         public DateTime CreatedDate { get; set; }
         public int CardCount { get; set; }
         public int CardsDue { get; set; }
+        public int NewCards { get; set; }
     }
 }
