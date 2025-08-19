@@ -15,6 +15,12 @@ namespace Vanki.Client.Services
             return await http.GetFromJsonAsync<List<DeckSummaryDto>>("decks");
         }
 
+        public async Task<DeckDetailDto?> GetDeck(Guid deckId)
+        {
+            var http = _factory.CreateClient("Api");
+            return await http.GetFromJsonAsync<DeckDetailDto>($"decks/{deckId}");
+        }
+
         public async Task CreateDeck(string name)
         {
             var http = _factory.CreateClient("Api");

@@ -1,0 +1,52 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_valid">
+            <MudTextField @bind-Value="_front"
+                          Label="Front"
+                          Required="true"
+                          RequiredError="Front is required" />
+            <MudTextField @bind-Value="_back"
+                          Label="Back"
+                          Required="true"
+                          RequiredError="Back is required" />
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Disabled="@(!_valid)" OnClick="Save">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    // passed in by the caller
+    [Parameter] public Guid? CardId { get; set; }
+    [Parameter] public string? InitialFront { get; set; }
+    [Parameter] public string? InitialBack { get; set; }
+
+    private MudForm? _form;
+    private bool _valid;
+    private string _front = string.Empty;
+    private string _back = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _front = InitialFront ?? string.Empty;
+        _back = InitialBack ?? string.Empty;
+    }
+
+    private async Task Save()
+    {
+        await _form!.Validate();
+        if (!_valid) return;
+
+        // return the user's input to the caller
+        MudDialog.Close(DialogResult.Ok(new CardInput(CardId, _front, _back)));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public record CardInput(Guid? CardId, string Front, string Back);
+}

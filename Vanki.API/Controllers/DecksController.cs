@@ -72,8 +72,8 @@ namespace Vanki.API.Controllers
                         Back = c.Back,
                         ReviewDate = c.ReviewDate
                     }).ToList(),
-                    CardsDue = d.Cards.Count(c => c.ReviewDate <= DateTime.UtcNow),
-                    NewCards = d.Cards.Count(c => c.ReviewDate == DateTime.UtcNow),
+                    CardsDue = d.Cards.Count(c => c.ReviewDate != null && c.ReviewDate <= DateTime.UtcNow),
+                    NewCards = d.Cards.Count(c => c.ReviewDate == null)
                 })
                 .FirstOrDefaultAsync();
 
@@ -103,8 +103,8 @@ namespace Vanki.API.Controllers
                     Name = d.Name,
                     CreatedDate = d.CreatedDate,
                     CardCount = d.Cards.Count(),
-                    CardsDue = d.Cards.Count(c => c.ReviewDate <= DateTime.UtcNow),
-                    NewCards = d.Cards.Count(c => c.ReviewDate == DateTime.UtcNow)
+                    CardsDue = d.Cards.Count(c => c.ReviewDate != null && c.ReviewDate <= DateTime.UtcNow),
+                    NewCards = d.Cards.Count(c => c.ReviewDate == null)
                 })
                 .ToListAsync();
 

@@ -1,0 +1,160 @@
+﻿@page "/decks/{deckId:guid}/cards"
+@inject IHttpClientFactory Factory
+@inject CardService CardService
+@inject DeckService DeckService
+@inject IDialogService Dialog
+@inject NavigationManager NavigationManager
+
+<PageTitle>Cards</PageTitle>
+
+<MudContainer Class="d-flex align-center justify-center mud-width-full" style="height:100vh">
+    <MudPaper Class="pa-4" Style="width:100%; max-width:900px;">
+        <MudGrid Class="justify-space-between align-items-center">
+            <MudItem>
+                @if (_deck is null)
+                {
+                    <MudSkeleton Animation="Animation.Pulse" Width="200px" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.h5" GutterBottom>@_deck.Name</MudText>
+                }
+            </MudItem>
+
+            <MudItem>
+                <MudStack Row Spacing="2">
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.TwoTone.Add"
+                               OnClick="@(()=>AddCard(deckId))">
+                        Add
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Sharp.Edit"
+                               OnClick="ToggleEdit">
+                        Edit
+                    </MudButton>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+
+
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-3">@Error</MudAlert>
+        }
+
+        @if (Loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudTable Items="_cards" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Front</MudTh>
+                    <MudTh>Back</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Front">@context.Front</MudTd>
+                    <MudTd DataLabel="Back">@context.Back</MudTd>
+                    @if (Edit)
+                    {
+                        <MudTd Class="d-flex justify-end">
+                            <MudButton Variant="Variant.Filled"
+                                       StartIcon="@Icons.Material.Sharp.Delete"
+                                       OnClick="@(() => DeleteCard(deckId, context.Id))"
+                                       Class="ml-2">
+                                Delete
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled"
+                                       StartIcon="@Icons.Material.Sharp.Edit"
+                                       OnClick="@(() => EditCard(deckId, context.Id, context.Front, context.Back))"
+                                       Class="ml-2">
+                                Update
+                            </MudButton>
+                        </MudTd>
+                    }
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid deckId { get; set; }
+    private List<CardDto>? _cards;
+    private DeckDetailDto? _deck;
+    private bool Loading = true;
+    private string? Error;
+    private bool Edit = false;
+
+    private string Front { get; set; } = string.Empty;
+    private string Back { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync() => await LoadCards();
+
+    private async Task LoadCards()
+    {
+        Error = null; Loading = true;
+        try 
+        {
+            _deck = await DeckService.GetDeck(deckId);
+            _cards = _deck?.Cards;
+        }
+        catch (Exception ex) 
+        { 
+            Error = ex.Message; 
+        }
+        finally 
+        { 
+            Loading = false; 
+        }
+    }
+
+    private void ToggleEdit() => Edit = !Edit;
+
+    private async Task AddCard(Guid deckId)
+    {
+        var parameters = new DialogParameters { ["CardId"] = null, ["InitialFront"] = string.Empty, ["InitialBack"] = string.Empty };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await Dialog.ShowAsync<AddCardDialog>("Add Card", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AddCardDialog.CardInput input)
+        {
+            await CardService.CreateCard(deckId, input.Front, input.Back);
+            await LoadCards();
+        }
+    }
+
+    private async Task EditCard(Guid deckId, Guid cardId, string currentFront, string currentBack)
+    {
+        var parameters = new DialogParameters { ["CardId"] = cardId, ["InitialFront"] = currentFront, ["InitialBack"] = currentBack };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await Dialog.ShowAsync<AddCardDialog>("Edit Card", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AddCardDialog.CardInput input)
+        {
+            await CardService.UpdateCard(deckId, cardId, input.Front, input.Back);
+            await LoadCards();
+        }
+    }
+
+    private async Task DeleteCard(Guid deckId, Guid cardId)
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Deck", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await CardService.DeleteCard(deckId, cardId);
+            await LoadCards();
+        }
+    }
+}

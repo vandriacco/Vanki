@@ -12,6 +12,7 @@ namespace Vanki.Client.Services
         Task<Result> Login(string identifier, string password);
         Task<Result> Register(string username, string email, string password);
         Task Logout();
+        Task<bool> IsLoggedIn();
     }
 
     public class AuthenticationService : IAuthenticationService
@@ -104,6 +105,12 @@ namespace Vanki.Client.Services
             Token = null;
             await _storage.RemoveItemAsync("authToken");
             _navigationManager.NavigateTo("login", true);
+        }
+
+        public async Task<bool> IsLoggedIn()
+        {
+            var token = await _storage.GetItemAsStringAsync("authToken");
+            return !string.IsNullOrWhiteSpace(token);
         }
 
     }

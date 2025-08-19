@@ -55,7 +55,13 @@
                     <MudTh style="width:100px"></MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Name">
+                        <MudTd DataLabel="Name">
+                            <MudLink Href="@($"/decks/{context.Id}/cards")">
+                                @context.Name
+                            </MudLink>
+                        </MudTd>
+                    </MudTd>
                     @if(Edit)
                     {
                         <MudTd>

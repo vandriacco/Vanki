@@ -8,10 +8,10 @@ namespace Vanki.Client.Services
         private readonly IHttpClientFactory _factory;
         public CardService(IHttpClientFactory factory) => _factory = factory;
 
-        public async Task<List<CardDto>?> GetCards(Guid deckId)
+        public async Task<CardDto?> GetCard(Guid deckId, Guid cardId)
         {
             var http = _factory.CreateClient("Api");
-            return await http.GetFromJsonAsync<List<CardDto>>($"decks/{deckId}/cards");
+            return await http.GetFromJsonAsync<CardDto>($"decks/{deckId}/cards/{cardId}");
         }
 
         public async Task CreateCard(Guid deckId, string front, string back)
@@ -32,10 +32,10 @@ namespace Vanki.Client.Services
             await http.PutAsJsonAsync($"decks/{deckId}/cards/review/{cardId}", new ReviewRequest { Quality = quality});
         }
 
-        public async Task DeleteDeck(Guid deckId)
+        public async Task DeleteCard(Guid deckId, Guid cardId)
         {
             var http = _factory.CreateClient("Api");
-            await http.DeleteAsync($"decks/{deckId}");
+            await http.DeleteAsync($"decks/{deckId}/cards/{cardId}");
         }
     }
 }
