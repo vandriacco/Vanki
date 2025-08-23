@@ -79,7 +79,7 @@
                     <MudTd DataLabel="New">@context.NewCards</MudTd>
                     <MudTd>
                         <MudButton Variant="Variant.Filled"
-                                    Disabled="@(@context.CardsDue == 0)"
+                                    Disabled="@(@context.CardsDue == 0 && context.NewCards == 0)"
                                     Href="@($"/review/{context.Id}")">
                             Review
                         </MudButton>

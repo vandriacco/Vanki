@@ -1,0 +1,130 @@
+﻿@page "/review/{deckId:guid}"
+@inject IHttpClientFactory Factory
+@inject NavigationManager Nav
+@inject CardService CardService
+
+
+<MudContainer Class="d-flex justify-center">
+    <MudStack Spacing="3" AlignItems="AlignItems.Center" Class="mt-6" Style="max-width: 720px;">
+        <MudText Typo="Typo.h5">Review</MudText>
+
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error">@Error</MudAlert>
+        }
+        else if (Loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (_card is null)
+        {
+            <MudAlert Severity="Severity.Info">Nothing to review right now.</MudAlert>
+        }
+        else
+        {
+            <!-- The “card” -->
+            <MudPaper Elevation="8" Outlined="true"
+                      Class="d-flex justify-center align-center mx-auto"
+                      Style="width:70vh; max-width:800px; height:50vh;">
+
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Inherit"
+                           FullWidth="true"
+                           Style="height:100%;"
+                           OnClick="ToggleReveal">
+
+                    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="h-100 w-100">
+                        <MudText Typo="Typo.h3" Align="Align.Center">
+                            @(_revealed? _card?.Back : _card?.Front)
+                        </MudText>
+                    </MudStack>
+                </MudButton>
+            </MudPaper>
+
+            <!-- Grade buttons (appear after reveal) -->
+            @if (_revealed)
+            {
+                <MudStack Row Justify="Justify.Center" Spacing="2" Class="mt-2">
+                    <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="@(() => Grade(1))">
+                        Again
+                    </MudButton>
+                    <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => Grade(3))">
+                        Hard
+                    </MudButton>
+                    <MudButton Color="Color.Info" Variant="Variant.Filled" OnClick="@(() => Grade(4))">
+                        Good
+                    </MudButton>
+                    <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="@(() => Grade(5))">
+                        Easy
+                    </MudButton>
+                </MudStack>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Class="mt-2">Click the card to reveal the answer</MudText>
+            }
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter] public Guid deckId { get; set; }
+
+    private bool Loading = true;
+    private string? Error;
+    private bool _revealed;
+    private CardDto? _card;
+
+    private record ReviewGradeRequest(int Grade);
+
+    protected override async Task OnInitializedAsync() => await LoadNext();
+
+    private async Task LoadNext()
+    {
+        Loading = true;
+        Error = null;
+        _revealed = false;
+
+        try
+        {
+            _card = await CardService.GetNextReview(deckId);
+
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleReveal()
+    {
+        if (_card is null) return;
+        _revealed = !_revealed;
+    }
+
+    private async Task Grade(int grade)
+    {
+        if (_card is null) return;
+
+        try
+        {
+            await CardService.ReviewCard(deckId, _card.Id, grade);
+            _revealed = false;
+            await LoadNext();
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Error = httpEx.Message;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+}

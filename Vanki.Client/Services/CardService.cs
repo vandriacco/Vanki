@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using Vanki.API.Models;
 
 namespace Vanki.Client.Services
@@ -30,6 +31,20 @@ namespace Vanki.Client.Services
         {
             var http = _factory.CreateClient("Api");
             await http.PutAsJsonAsync($"decks/{deckId}/cards/review/{cardId}", new ReviewRequest { Quality = quality});
+        }
+
+        public async Task<CardDto?> GetNextReview(Guid deckId)
+        {
+            var http = _factory.CreateClient("Api");
+
+            var response = await http.GetAsync($"decks/{deckId}/cards/review/next", HttpCompletionOption.ResponseHeadersRead);
+
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<CardDto>();
         }
 
         public async Task DeleteCard(Guid deckId, Guid cardId)

@@ -75,6 +75,7 @@ namespace Vanki.API.Controllers
             }
 
             var card = await _db.Cards
+                .AsNoTracking()
                 .Include(x => x.Deck)
                 .FirstOrDefaultAsync(c => c.Id == cardId && c.Deck.UserId == userGuid);
 
@@ -150,6 +151,40 @@ namespace Vanki.API.Controllers
             await _db.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("review/next")]
+        public async Task<IActionResult> ReviewNext(Guid deckId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            var next = await _db.Cards
+                .AsNoTracking()
+                .Where(c => c.DeckId == deckId && c.Deck.UserId == userGuid)
+                .Where(c => c.ReviewDate == null || c.ReviewDate <= DateTime.UtcNow)
+                .OrderBy(c => c.ReviewDate == null ? 1 : 0)     // 0 = due, 1 = new
+                .ThenBy(c => c.ReviewDate ?? DateTime.MaxValue) // earliest due first
+                .Select(c => new CardDto
+                {
+                    Id = c.Id,
+                    Front = c.Front,
+                    Back = c.Back,
+                    CreatedDate = c.CreatedDate,
+                    ReviewDate = c.ReviewDate
+                })
+                .FirstOrDefaultAsync();
+
+            if (next is null)
+            {
+                return NoContent();
+            }
+
+            return Ok(next);
         }
 
         [HttpDelete("{cardId:guid}")]

@@ -59,6 +59,7 @@ namespace Vanki.API.Controllers
             }
 
             var deck = await _db.Decks
+                .AsNoTracking()
                 .Where(d => d.UserId == userGuid && d.Id == deckId)
                 .Select(d => new DeckDetailDto
                 {
@@ -96,6 +97,7 @@ namespace Vanki.API.Controllers
             }
 
             var decks = await _db.Decks
+                .AsNoTracking()
                 .Where(d => d.UserId == userGuid)
                 .Select(d => new DeckSummaryDto
                 {
